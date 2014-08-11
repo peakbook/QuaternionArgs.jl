@@ -6,7 +6,7 @@ module QuaternionArgs
 	import Quaternions: Quaternion
     
     export QuaternionArg, QuaternionArg128, QuaternionArg64, QuaternionArg32
-	export amp, phase1, phase2, phase3, comp
+	export amp, phase1, phase2, phase3, normalize, comp
     
     immutable QuaternionArg{T<:Real} <: Number
         q::T

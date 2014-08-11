@@ -19,7 +19,7 @@ function test_getter()
 end
 
 function test_conversion()
-	a = randn(Quaternion)
+	a = randn(Quaternion128)
 	ag = QuaternionArg(a)
 	aga = Quaternion(ag)
 
@@ -28,12 +28,12 @@ end
 
 function test_four_arith()
 	for i=1:1000
-		a = randn(Quaternion)
-		b = randn(Quaternion)
+		a = randn(Quaternion128)
+		b = randn(Quaternion128)
 		ag = QuaternionArg(a)
 		bg = QuaternionArg(b)
 
-		anorm = normalize(a)
+		anorm = normalize(ag)
 		@assert amp(anorm)==1.0
 
 		@assert comp(a+b, Quaternion(ag+bg), eps)
