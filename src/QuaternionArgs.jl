@@ -160,17 +160,19 @@ module QuaternionArgs
 	beta(z::Quaternion)  = Quaternion(z.q0, -z.q1,  z.q2, -z.q3)
 	gamma(z::Quaternion) = Quaternion(z.q0, -z.q1, -z.q2,  z.q3)
 
+	comp(x::Real, y::Real, eps::Real=1e-15) =
+	begin
+		if abs(x-y) > eps
+			return false
+		end
+		return true
+	end
 	comp(a::Quaternion, b::Quaternion,eps::Real=1e-15) =
 	begin
-		function check(x,y)
-			if abs(x-y) > eps
-				return false
-			end
-		end
-		check(a.q0, b.q0)
-		check(a.q1, b.q1)
-		check(a.q2, b.q2)
-		check(a.q3, b.q3)
+		comp(a.q0, b.q0)
+		comp(a.q1, b.q1)
+		comp(a.q2, b.q2)
+		comp(a.q3, b.q3)
 
 		return true
 	end
