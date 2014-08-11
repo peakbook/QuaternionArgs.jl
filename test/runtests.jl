@@ -5,17 +5,19 @@ using Base.Test
 eps = 1e-15
 
 function test_getter()
-	a = QuaternionArg(10,1,2,3)
-	@assert amp(a)==10
-	@assert phase1(a)==1
-	@assert phase2(a)==2
-	@assert phase3(a)==3
+	a = randn(QuaternionArg128)
+	@assert amp(a)==a.q
+	@assert phase1(a)==a.phi
+	@assert phase2(a)==a.theta
+	@assert phase3(a)==a.psi
 
-	b = QuaternionArg(Quaternion(10,1,2,3))
-	@assert comp(real(a),10.0,eps)
-	@assert comp(imagi(a),1.0,eps)
-	@assert comp(imagj(a),2.0,eps)
-	@assert comp(imagk(a),3.0,eps)
+	a = normalize(randn(QuaternionArg128))
+	b = Quaternion(a)
+	ab = QuaternionArg(b)
+	@assert comp(real(ab),b.q0,eps)
+	@assert comp(imagi(ab),b.q1,eps)
+	@assert comp(imagj(ab),b.q2,eps)
+	@assert comp(imagk(ab),b.q3,eps)
 end
 
 function test_conversion()
@@ -27,20 +29,18 @@ function test_conversion()
 end
 
 function test_four_arith()
-	for i=1:10000
-		a = randn(Quaternion128)
-		b = randn(Quaternion128)
-		ag = QuaternionArg(a)
-		bg = QuaternionArg(b)
+	a = randn(Quaternion128)
+	b = randn(Quaternion128)
+	ag = QuaternionArg(a)
+	bg = QuaternionArg(b)
 
-		anorm = normalize(ag)
-		@assert amp(anorm)==one(anorm.q)
+	anorm = normalize(ag)
+	@assert amp(anorm)==one(anorm.q)
 
-		@assert comp(a+b, Quaternion(ag+bg), eps)
-		@assert comp(a-b, Quaternion(ag-bg), eps)
-		@assert comp(a*b, Quaternion(ag*bg), eps)
-		@assert comp(a/b, Quaternion(ag/bg), eps)
-	end
+	@assert comp(a+b, Quaternion(ag+bg), eps)
+	@assert comp(a-b, Quaternion(ag-bg), eps)
+	@assert comp(a*b, Quaternion(ag*bg), eps)
+	@assert comp(a/b, Quaternion(ag/bg), eps)
 end
 
 
