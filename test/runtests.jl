@@ -12,10 +12,10 @@ function test_getter()
 	@assert phase3(a)==3
 
 	b = QuaternionArg(Quaternion(10,1,2,3))
-	@assert real(a)==10
-	@assert imagi(a)==1
-	@assert imagj(a)==2
-	@assert imagk(a)==3
+	@assert comp(real(a),10.0,eps)
+	@assert comp(imagi(a),1.0,eps)
+	@assert comp(imagj(a),2.0,eps)
+	@assert comp(imagk(a),3.0,eps)
 end
 
 function test_conversion()
@@ -27,14 +27,14 @@ function test_conversion()
 end
 
 function test_four_arith()
-	for i=1:1000
+	for i=1:10000
 		a = randn(Quaternion128)
 		b = randn(Quaternion128)
 		ag = QuaternionArg(a)
 		bg = QuaternionArg(b)
 
 		anorm = normalize(ag)
-		@assert amp(anorm)==1.0
+		@assert amp(anorm)==one(anorm.q)
 
 		@assert comp(a+b, Quaternion(ag+bg), eps)
 		@assert comp(a-b, Quaternion(ag-bg), eps)
