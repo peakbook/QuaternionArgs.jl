@@ -127,8 +127,7 @@ module QuaternionArgs
 
     for fn in (:amp,:phase1,:phase2,:phase3,:normalize)
         @eval begin
-            ($fn)(A::AbstractVector) = [ ($fn)(x) for x in A]
-            ($fn)(A::AbstractArray) = reshape([ ($fn)(x) for x in A],size(A))
+            ($fn)(A::AbstractArray) = map(($fn),A)
         end
     end
     
