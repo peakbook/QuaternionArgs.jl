@@ -2,7 +2,7 @@ require("Quaternions")
 
 module QuaternionArgs
     using Quaternions
-    import Base: int, convert, promote_rule, show, real, imag, conj, abs, abs2, inv, +, -, /, *, rand, randn
+    import Base: int, convert, promote_rule, show, real, imag, conj, abs, abs2, inv, +, -, /, *, rand
 	import Quaternions: Quaternion
     
     export QuaternionArg, QuaternionArg128, QuaternionArg64, QuaternionArg32
@@ -143,8 +143,7 @@ module QuaternionArgs
     (*)(z::QuaternionArg, w::QuaternionArg) = QuaternionArg(Quaternion(z)*Quaternion(w))
     (/)(z::QuaternionArg, w::QuaternionArg) = QuaternionArg(Quaternion(z)/Quaternion(w))
 
-    rand{T<:Real}(::Type{QuaternionArg{T}}) = quaternionArg(rand(T),rand(T),rand(T),rand(T))
-    randn{T<:Real}(::Type{QuaternionArg{T}}) = quaternionArg(randn(),randn(),randn(),randn())
+    rand{T<:Real}(::Type{QuaternionArg{T}}) = quaternionArg(one(T),convert(T,2.0)*pi*(rand(T)-convert(T,0.5)),one(T)*pi*(rand(T)-convert(T,0.5)),convert(T,0.5)*pi*(rand(T)-convert(T,0.5)))
 
     real(z::QuaternionArg)  = Quaternion(z).q0
     imagi(z::QuaternionArg) = Quaternion(z).q1
@@ -175,5 +174,6 @@ module QuaternionArgs
 
 		return true
 	end
+
 end
 
