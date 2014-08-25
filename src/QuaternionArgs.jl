@@ -92,8 +92,8 @@ module QuaternionArgs
     end
     
     function show(io::IO, z::QuaternionArg)
-        pm(z) = z < 0 ? " - $(-z)" : " + $z"
-        print(io, z.q, " exp(", pm(z.phi),"i) exp(", pm(z.theta), "j) exp", pm(z.psi), "k)")
+        pm(z) = z < 0 ? "-$(-z)" : "+$z"
+        print(io, z.q, " (phi=",pm(z.phi)," theta=", pm(z.theta), " psi=", pm(z.psi), ")")
     end
     
     function quaternion{S<:Real,T<:Real,U<:Real,V<:Real}(A::Array{S}, B::Array{T}, C::Array{U}, D::Array{V})
