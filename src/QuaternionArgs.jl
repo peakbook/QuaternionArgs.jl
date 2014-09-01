@@ -1,4 +1,3 @@
-require("Quaternions")
 
 module QuaternionArgs
     using Quaternions
@@ -31,7 +30,14 @@ module QuaternionArgs
         q = abs(x)
         x = x/q
 
-        psi = -0.5*asin(2.0*(x.q1*x.q2 - x.q0*x.q3))
+        val = 2.0*(x.q1*x.q2 - x.q0*x.q3)
+        # error adjustment for satisfying the domain of asin
+        if val > one(typeof(q))
+            val = one(typeof(q))
+        elseif val < -one(typeof(q))
+            val = -one(typeof(q))
+        end
+        psi = -0.5*asin(val)
 
         if (psi != pi/4) && (psi != -pi/4)
             phi  = 0.5*argi(x*beta((conj(x))))
