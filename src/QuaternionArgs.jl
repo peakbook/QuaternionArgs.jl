@@ -2,10 +2,10 @@
 module QuaternionArgs
     using Quaternions
     import Base: int, convert, promote_rule, show, real, imag, conj, abs, abs2, inv, +, -, /, *, rand
-    import Quaternions: Quaternion
+    import Quaternions: Quaternion, imagi, imagj, imagk
     
     export QuaternionArg, QuaternionArg128, QuaternionArg64, QuaternionArg32
-    export amp, phase1, phase2, phase3, normalize, comp, imagi, imagj, imagk
+    export amp, phase1, phase2, phase3, normalize, comp
     
     immutable QuaternionArg{T<:Real} <: Number
         q::T
