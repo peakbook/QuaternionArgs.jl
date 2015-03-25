@@ -160,9 +160,9 @@ module QuaternionArgs
     beta(z::Quaternion)  = Quaternion(z.q0, -z.q1,  z.q2, -z.q3)
     gamma(z::Quaternion) = Quaternion(z.q0, -z.q1, -z.q2,  z.q3)
 
-    comp(x::Real, y::Real, eps::Real=1e-15) =
+    comp(x::Real, y::Real) =
     begin
-        if abs(x-y)*eps > eps
+        if abs(x-y) > eps(max(x,y))
             return false
         end
         return true
