@@ -162,12 +162,12 @@ module QuaternionArgs
 
     comp(x::Real, y::Real) =
     begin
-        if abs(x-y) > eps(max(x,y))
+        if abs(x-y) > eps(max(x,y)*1E4)
             return false
         end
         return true
     end
-    comp(a::Quaternion, b::Quaternion,eps::Real=1e-15) =
+    comp(a::Quaternion, b::Quaternion) =
     begin
         flg = comp(a.q0, b.q0) &
               comp(a.q1, b.q1) &
