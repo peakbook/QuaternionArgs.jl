@@ -3,7 +3,7 @@ using Quaternions
 import Base: int, convert, promote_rule, show, real, imag, conj, abs, abs2, inv, +, -, /, *, rand
 import Quaternions: Quaternion, imagi, imagj, imagk
 
-export QuaternionArg, QuaternionArg128, QuaternionArg64, QuaternionArg32
+export QuaternionArg, QuaternionArg256, QuaternionArg128, QuaternionArg64
 export amp, phase1, phase2, phase3, normalize, comp
 
 immutable QuaternionArg{T<:Real} <: Number
@@ -16,7 +16,8 @@ end
 QuaternionArg(q::Real,phi::Real,theta::Real,psi::Real) = QuaternionArg(promote(q,phi,theta,psi)...)
 QuaternionArg(x::Real) = QuaternionArg(x,zero(x),zero(x),zero(x))
 QuaternionArg(q::Quaternion) = convert(QuaternionArg,q)
-Quaternion(qarg::QuaternionArg) = begin
+
+function Quaternion(qarg::QuaternionArg)
     q0=qarg.q*(cos(qarg.phi)*cos(qarg.theta)*cos(qarg.psi) + sin(qarg.phi)*sin(qarg.theta)*sin(qarg.psi))
     q1=qarg.q*(sin(qarg.phi)*cos(qarg.theta)*cos(qarg.psi) - cos(qarg.phi)*sin(qarg.theta)*sin(qarg.psi))
     q2=qarg.q*(cos(qarg.phi)*sin(qarg.theta)*cos(qarg.psi) - sin(qarg.phi)*cos(qarg.theta)*sin(qarg.psi))
@@ -25,7 +26,7 @@ Quaternion(qarg::QuaternionArg) = begin
     return Quaternion(q0,q1,q2,q3)
 end
 
-QuaternionArg(x::Quaternion) = begin
+function QuaternionArg(x::Quaternion)
     q = abs(x)
     x = x/q
 
@@ -54,14 +55,16 @@ QuaternionArg(x::Quaternion) = begin
     return QuaternionArg(q, phi, theta, psi)
 end
 
-typealias QuaternionArg128 QuaternionArg{Float64}
-typealias QuaternionArg64 QuaternionArg{Float32}
-typealias QuaternionArg32 QuaternionArg{Float16}
+typealias QuaternionArg256 QuaternionArg{Float64}
+typealias QuaternionArg128 QuaternionArg{Float32}
+typealias QuaternionArg64 QuaternionArg{Float16}
 
 convert(::Type{QuaternionArg}, x::Real) = QuaternionArg(x)
 convert{T<:Real}(::Type{QuaternionArg{T}}, x::Real) = QuaternionArg(x)
 convert{T<:Real}(::Type{QuaternionArg{T}}, q::QuaternionArg) = QuaternionArg{T}(convert(T,q.q), convert(T,q.phi), convert(T,q.theta), convert(T,q.psi))
 convert{T<:Real}(::Type{QuaternionArg{T}}, q::QuaternionArg{T}) = q
+convert{T<:Real}(::Type{QuaternionArg{T}}, q::Quaternion{T}) = QuaternionArg(q)
+convert{T<:Real}(::Type{Quaternion{T}}, q::QuaternionArg{T}) = Quaternion(q)
 
 promote_rule{T<:Real}(::Type{QuaternionArg{T}}, ::Type{T}) = QuaternionArg{T}
 promote_rule{T<:Real}(::Type{QuaternionArg}, ::Type{T}) = QuaternionArg
@@ -74,12 +77,12 @@ quaternionArg(q,phi,theta,psi) = QuaternionArg(q,phi,theta,psi)
 quaternionArg(x) = QuaternionArg(x)
 quaternionArg(q::QuaternionArg) = q 
 
-quaternionArg128(q::Float64,phi::Float64,theta::Float64,psi::Float64) = QuaternionArg{Float64}(q,phi,theta,psi)
-quaternionArg128(q::Real,phi::Real,theta::Real,psi::Real) = quaternion128(float64(q),float64(phi),float64(theta),float64(psi))
-quaternion64(q::Float32,phi::Float32,theta::Float32,psi::Float32) = QuaternionArg{Float32}(q,phi,theta,psi)
-quaternion64(q::Real,phi::Real,theta::Real,psi::Real) = quaternion64(float32(q),float32(phi),float32(theta),float32(psi))
-quaternion32(q::Float16,phi::Float16,theta::Float16,psi::Float16) = QuaternionArg{Float16}(q,phi,theta,psi)
-quaternion32(q::Real,phi::Real,theta::Real,psi::Real) = quaternion32(float16(q),float16(phi),float16(theta),float16(psi))
+quaternionArg256(q::Float64,phi::Float64,theta::Float64,psi::Float64) = QuaternionArg{Float64}(q,phi,theta,psi)
+quaternionArg256(q::Real,phi::Real,theta::Real,psi::Real) = quaternion256(float64(q),float64(phi),float64(theta),float64(psi))
+quaternionArg128(q::Float32,phi::Float32,theta::Float32,psi::Float32) = QuaternionArg{Float32}(q,phi,theta,psi)
+quaternionArg128(q::Real,phi::Real,theta::Real,psi::Real) = quaternion128(float32(q),float32(phi),float32(theta),float32(psi))
+quaternionArg64(q::Float16,phi::Float16,theta::Float16,psi::Float16) = QuaternionArg{Float16}(q,phi,theta,psi)
+quaternionArg64(q::Real,phi::Real,theta::Real,psi::Real) = quaternion64(float16(q),float16(phi),float16(theta),float16(psi))
 
 #for fn in _numeric_conversion_func_names
 for fn in (:int,:integer,:signed,:int8,:int16,:int32,:int64,:int128,
@@ -93,18 +96,9 @@ function show(io::IO, z::QuaternionArg)
     print(io, z.q, " (phi=",pm(z.phi)," theta=", pm(z.theta), " psi=", pm(z.psi), ")")
 end
 
-function quaternion{S<:Real,T<:Real,U<:Real,V<:Real}(A::Array{S}, B::Array{T}, C::Array{U}, D::Array{V})
-    if !(size(A)==size(B)==size(C)==size(D)); error("argument dimensions must match"); end
-    F = similar(A, typeof(quaternion(zero(S),zero(T),zero(U),zero(V))))
-    for i=1:length(A)
-        @inbounds F[i] = quaternion(A[i], B[i], C[i], D[i])
-    end
-    return F
-end
-
-for (f,t) in ((:quaternionArg32, QuaternionArg32),
-    (:quaternionArg64, QuaternionArg64),
-    (:quaternionArg128, QuaternionArg128))
+for (f,t) in ((:quaternionArg64, QuaternionArg64),
+    (:quaternionArg128, QuaternionArg128),
+    (:quaternionArg256, QuaternionArg256))
     @eval ($f)(x::AbstractArray{$t}) = x
     @eval ($f)(x::AbstractArray) = copy!(similar(x,$t), x)
 end
@@ -155,15 +149,14 @@ alpha(z::Quaternion) = Quaternion(z.q0,  z.q1, -z.q2, -z.q3)
 beta(z::Quaternion)  = Quaternion(z.q0, -z.q1,  z.q2, -z.q3)
 gamma(z::Quaternion) = Quaternion(z.q0, -z.q1, -z.q2,  z.q3)
 
-comp(x::Real, y::Real) =
-begin
+function comp(x::Real, y::Real)
     if abs(x-y) > eps(max(x,y)*1E4)
         return false
     end
     return true
 end
-comp(a::Quaternion, b::Quaternion) =
-begin
+
+function comp(a::Quaternion, b::Quaternion)
     flg = comp(a.q0, b.q0) &
     comp(a.q1, b.q1) &
     comp(a.q2, b.q2) &
