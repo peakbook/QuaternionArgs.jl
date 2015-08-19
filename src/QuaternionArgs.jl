@@ -103,8 +103,10 @@ for (f,t) in ((:quaternionArg64, QuaternionArg64),
     @eval ($f)(x::AbstractArray) = copy!(similar(x,$t), x)
 end
 
-quaternionArg{T<:QuaternionArg}(x::AbstractArray{T}) = x
-quaternionArg(x::AbstractArray) = copy!(similar(x,typeof(quaternion(one(eltype(x))))), x)
+QuaternionArg{T<:QuaternionArg}(x::AbstractArray{T}) = x
+QuaternionArg(x::AbstractArray) = copy!(similar(x,typeof(quaternion(one(eltype(x))))), x)
+QuaternionArg{T<:Quaternion}(x::AbstractArray{T}) = map(QuaternionArg,x)
+Quaternion{T<:QuaternionArg}(x::AbstractArray{T}) = map(Quaternion,x)
 
 amp(z::QuaternionArg) = z.q
 phase1(z::QuaternionArg) = z.phi
