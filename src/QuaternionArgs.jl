@@ -28,6 +28,9 @@ end
 
 function QuaternionArg(x::Quaternion)
     q = abs(x)
+    if q==zero(typeof(q))
+        return QuaternionArg(zero(typeof(q)))
+    end
     x = x/q
 
     val = 2.0*(x.q1*x.q2 - x.q0*x.q3)
