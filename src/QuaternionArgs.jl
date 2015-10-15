@@ -157,10 +157,7 @@ beta(z::Quaternion)  = Quaternion(z.q0, -z.q1,  z.q2, -z.q3)
 gamma(z::Quaternion) = Quaternion(z.q0, -z.q1, -z.q2,  z.q3)
 
 function comp(x::Real, y::Real)
-    if abs(x-y) > eps(max(x,y)*1E4)
-        return false
-    end
-    return true
+    return abs(x-y) <= eps(max(x,y)*1E4)
 end
 
 function comp(a::Quaternion, b::Quaternion)
