@@ -6,7 +6,9 @@ import Base: int, convert, promote_rule, show, real, imag, conj, abs, abs2, inv,
 import Quaternions: Quaternion, imagi, imagj, imagk
 
 export QuaternionArg, QuaternionArg256, QuaternionArg128, QuaternionArg64
-export amp, phase1, phase2, phase3, normalize, comp
+export amp, phase1, phase2, phase3, normalize
+
+const tor = 1E6
 
 immutable QuaternionArg{T<:Real} <: Number
     q::T
@@ -157,7 +159,7 @@ beta(z::Quaternion)  = Quaternion(z.q0, -z.q1,  z.q2, -z.q3)
 gamma(z::Quaternion) = Quaternion(z.q0, -z.q1, -z.q2,  z.q3)
 
 function comp(x::Real, y::Real)
-    return abs(x-y) <= eps(max(x,y)*1E4)
+    return abs(x-y) <= eps(max(x,y)*tor)
 end
 
 function comp(a::Quaternion, b::Quaternion)
