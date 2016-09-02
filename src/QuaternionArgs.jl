@@ -2,11 +2,11 @@ VERSION >= v"0.4.0-dev+6521" && __precompile__()
 
 module QuaternionArgs
 using Quaternions
-import Base: int, convert, promote_rule, show, real, imag, conj, abs, abs2, inv, +, -, /, *, rand
+import Base: normalize, convert, promote_rule, show, real, imag, conj, abs, abs2, inv, +, -, /, *, rand
 import Quaternions: Quaternion, imagi, imagj, imagk
 
 export QuaternionArg, QuaternionArg256, QuaternionArg128, QuaternionArg64
-export amp, phase1, phase2, phase3, normalize
+export amp, phase1, phase2, phase3
 
 const tor = 1E6
 
@@ -19,7 +19,6 @@ end
 
 QuaternionArg(q::Real,phi::Real,theta::Real,psi::Real) = QuaternionArg(promote(q,phi,theta,psi)...)
 QuaternionArg(x::Real) = QuaternionArg(x,zero(x),zero(x),zero(x))
-QuaternionArg(q::Quaternion) = convert(QuaternionArg,q)
 
 function Quaternion(qarg::QuaternionArg)
     q0=qarg.q*(cos(qarg.phi)*cos(qarg.theta)*cos(qarg.psi) + sin(qarg.phi)*sin(qarg.theta)*sin(qarg.psi))
@@ -84,30 +83,9 @@ quaternionArg(q,phi,theta,psi) = QuaternionArg(q,phi,theta,psi)
 quaternionArg(x) = QuaternionArg(x)
 quaternionArg(q::QuaternionArg) = q 
 
-quaternionArg256(q::Float64,phi::Float64,theta::Float64,psi::Float64) = QuaternionArg{Float64}(q,phi,theta,psi)
-quaternionArg256(q::Real,phi::Real,theta::Real,psi::Real) = quaternion256(float64(q),float64(phi),float64(theta),float64(psi))
-quaternionArg128(q::Float32,phi::Float32,theta::Float32,psi::Float32) = QuaternionArg{Float32}(q,phi,theta,psi)
-quaternionArg128(q::Real,phi::Real,theta::Real,psi::Real) = quaternion128(float32(q),float32(phi),float32(theta),float32(psi))
-quaternionArg64(q::Float16,phi::Float16,theta::Float16,psi::Float16) = QuaternionArg{Float16}(q,phi,theta,psi)
-quaternionArg64(q::Real,phi::Real,theta::Real,psi::Real) = quaternion64(float16(q),float16(phi),float16(theta),float16(psi))
-
-#for fn in _numeric_conversion_func_names
-for fn in (:int,:integer,:signed,:int8,:int16,:int32,:int64,:int128,
-    :uint,:unsigned,:uint8,:uint16,:uint32,:uint64,:uint128,
-    :float,:float16,:float32,:float64)
-    @eval $fn(q::QuaternionArg) = QuaternionArg($fn(q.q),$fn(q.phi),$fn(q.theta),$fn(q.psi))
-end
-
 function show(io::IO, z::QuaternionArg)
     pm(z) = z < 0 ? "-$(-z)" : "+$z"
     print(io, z.q, " (phi=",pm(z.phi)," theta=", pm(z.theta), " psi=", pm(z.psi), ")")
-end
-
-for (f,t) in ((:quaternionArg64, QuaternionArg64),
-    (:quaternionArg128, QuaternionArg128),
-    (:quaternionArg256, QuaternionArg256))
-    @eval ($f)(x::AbstractArray{$t}) = x
-    @eval ($f)(x::AbstractArray) = copy!(similar(x,$t), x)
 end
 
 QuaternionArg{T<:QuaternionArg}(x::AbstractArray{T}) = x
