@@ -1,4 +1,4 @@
-VERSION >= v"0.4.0-dev+6521" && __precompile__()
+__precompile__()
 
 module QuaternionArgs
 using Quaternions
@@ -10,15 +10,17 @@ export amp, phase1, phase2, phase3
 
 const tor = 1E6
 
-immutable QuaternionArg{T<:Real} <: Number
+immutable QuaternionArg{T<:AbstractFloat} <: Number
     q::T
     phi::T
     theta::T
     psi::T
 end
 
-QuaternionArg(q::Real,phi::Real,theta::Real,psi::Real) = QuaternionArg(promote(q,phi,theta,psi)...)
-QuaternionArg(x::Real) = QuaternionArg(x,zero(x),zero(x),zero(x))
+QuaternionArg(q::AbstractFloat,phi::AbstractFloat,theta::AbstractFloat,psi::AbstractFloat) = QuaternionArg(promote(q,phi,theta,psi)...)
+QuaternionArg(q::Integer,phi::Integer,theta::Integer,psi::Integer) = QuaternionArg{Float64}(promote(q,phi,theta,psi)...)
+QuaternionArg(x::AbstractFloat) = QuaternionArg(x,zero(x),zero(x),zero(x))
+QuaternionArg(x::Integer) = QuaternionArg(float(x))
 
 function Quaternion(qarg::QuaternionArg)
     q0=qarg.q*(cos(qarg.phi)*cos(qarg.theta)*cos(qarg.psi) + sin(qarg.phi)*sin(qarg.theta)*sin(qarg.psi))
@@ -29,33 +31,37 @@ function Quaternion(qarg::QuaternionArg)
     return Quaternion(q0,q1,q2,q3)
 end
 
-function QuaternionArg(x::Quaternion)
+function QuaternionArg{T<:Real}(x::Quaternion{T})
+    QuaternionArg(convert(Quaternion256,x))
+end
+
+function QuaternionArg{T<:AbstractFloat}(x::Quaternion{T})
     q = abs(x)
     if q==zero(typeof(q))
         return QuaternionArg(zero(typeof(q)))
     end
     x = x/q
 
-    val = 2.0*(x.q1*x.q2 - x.q0*x.q3)
+    val = 2*(x.q1*x.q2 - x.q0*x.q3)
     # error adjustment for satisfying the domain of asin
     if val > one(typeof(q))
         val = one(typeof(q))
     elseif val < -one(typeof(q))
         val = -one(typeof(q))
     end
-    psi = -0.5*asin(val)
+    psi = -asin(val)/2
 
-    if (psi != pi/4) && (psi != -pi/4)
-        phi  = 0.5*argi(x*beta((conj(x))))
-        theta= 0.5*argj(alpha(conj(x))*x)
+    if (psi != T(pi/4)) && (psi != -T(pi/4))
+        phi  = argi(x*beta((conj(x))))/2
+        theta= argj(alpha(conj(x))*x)/2
     else 
-        phi = 0
-        theta= 0.5*argj(gamma(conj(x))*x)
+        phi = T(0)
+        theta= argj(gamma(conj(x))*x)/2
     end
 
-    t = Quaternion(QuaternionArg(1.0,phi,theta,psi));
+    t = Quaternion(QuaternionArg(one(T),phi,theta,psi));
     if comp(t,-x)
-        phi = phi - sign(phi)*pi
+        phi = phi - sign(phi)*T(pi)
     end
 
     return QuaternionArg(q, phi, theta, psi)
@@ -66,18 +72,15 @@ typealias QuaternionArg128 QuaternionArg{Float32}
 typealias QuaternionArg64 QuaternionArg{Float16}
 
 convert(::Type{QuaternionArg}, x::Real) = QuaternionArg(x)
-convert{T<:Real}(::Type{QuaternionArg{T}}, x::Real) = QuaternionArg(x)
-convert{T<:Real}(::Type{QuaternionArg{T}}, q::QuaternionArg) = QuaternionArg{T}(convert(T,q.q), convert(T,q.phi), convert(T,q.theta), convert(T,q.psi))
-convert{T<:Real}(::Type{QuaternionArg{T}}, q::QuaternionArg{T}) = q
-convert{T<:Real}(::Type{QuaternionArg{T}}, q::Quaternion{T}) = QuaternionArg(q)
+convert{T<:AbstractFloat}(::Type{QuaternionArg{T}}, x::Real) = QuaternionArg(x)
+convert{T<:AbstractFloat,S<:AbstractFloat}(::Type{QuaternionArg{T}}, q::QuaternionArg{S}) = QuaternionArg{T}(T(q.q), T(q.phi), T(q.theta), T(q.psi))
+convert{T<:AbstractFloat}(::Type{QuaternionArg{T}}, q::QuaternionArg{T}) = q
+convert{T<:AbstractFloat}(::Type{QuaternionArg{T}}, q::Quaternion{T}) = QuaternionArg(q)
 convert{T<:Real}(::Type{Quaternion{T}}, q::QuaternionArg{T}) = Quaternion(q)
 
-promote_rule{T<:Real}(::Type{QuaternionArg{T}}, ::Type{T}) = QuaternionArg{T}
-promote_rule{T<:Real}(::Type{QuaternionArg}, ::Type{T}) = QuaternionArg
-promote_rule{T<:Real,S<:Real}(::Type{QuaternionArg{T}}, ::Type{S}) = QuaternionArg{promote_type(T,S)}
-promote_rule{T<:Real,S<:Real}(::Type{QuaternionArg{T}}, ::Type{QuaternionArg{S}}) = QuaternionArg{promote_type(T,S)}
-promote_rule{T<:Real,S<:Real}(::Type{QuaternionArg{T}}, ::Type{Quaternion{S}}) = QuaternionArg{promote_type(T,S)}
-promote_rule{T<:Real,S<:Real}(::Type{Quaternion{T}}, ::Type{QuaternionArg{S}}) = Quaternion{promote_type(T,S)}
+promote_rule{T<:AbstractFloat,S<:Real}(::Type{QuaternionArg{T}}, ::Type{S}) = QuaternionArg{promote_type(T,S)}
+promote_rule{T<:AbstractFloat,S<:Real}(::Type{QuaternionArg{T}}, ::Type{QuaternionArg{S}}) = QuaternionArg{promote_type(T,S)}
+promote_rule{T<:AbstractFloat,S<:Real}(::Type{QuaternionArg{T}}, ::Type{Quaternion{S}}) = Quaternion{promote_type(T,S)}
 
 quaternionArg(q,phi,theta,psi) = QuaternionArg(q,phi,theta,psi)
 quaternionArg(x) = QuaternionArg(x)
@@ -97,7 +100,7 @@ amp(z::QuaternionArg) = z.q
 phase1(z::QuaternionArg) = z.phi
 phase2(z::QuaternionArg) = z.theta
 phase3(z::QuaternionArg) = z.psi
-normalize(z::QuaternionArg) = QuaternionArg(1.0,z.phi,z.theta,z.psi)
+normalize(z::QuaternionArg) = QuaternionArg(one(z.q),z.phi,z.theta,z.psi)
 
 phase1{T<:Real}(x::AbstractVector{T}) = zero(x)
 phase2{T<:Real}(x::AbstractVector{T}) = zero(x)
@@ -121,7 +124,7 @@ inv(z::QuaternionArg) = QuaternionArg(inv(Quaternion(z)))
 (*)(z::QuaternionArg, w::QuaternionArg) = QuaternionArg(Quaternion(z)*Quaternion(w))
 (/)(z::QuaternionArg, w::QuaternionArg) = QuaternionArg(Quaternion(z)/Quaternion(w))
 
-rand{T<:Real}(::Type{QuaternionArg{T}}) = quaternionArg(one(T),convert(T,2.0)*pi*(rand(T)-convert(T,0.5)),one(T)*pi*(rand(T)-convert(T,0.5)),convert(T,0.5)*pi*(rand(T)-convert(T,0.5)))
+rand{T<:AbstractFloat}(::Type{QuaternionArg{T}}) = quaternionArg(one(T),T(2.0)*T(pi)*(rand(T)-T(0.5)),one(T)*T(pi)*(rand(T)-T(0.5)),T(0.5)*T(pi)*(rand(T)-T(0.5)))
 
 real(z::QuaternionArg)  = Quaternion(z).q0
 imagi(z::QuaternionArg) = Quaternion(z).q1
