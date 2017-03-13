@@ -2,6 +2,7 @@ __precompile__()
 
 module QuaternionArgs
 using Quaternions
+using Compat
 import Base: normalize, convert, promote_rule, show, real, imag, conj, abs, abs2, inv, +, -, /, *, rand
 import Quaternions: Quaternion, imagi, imagj, imagk
 
@@ -67,9 +68,9 @@ function QuaternionArg{T<:AbstractFloat}(x::Quaternion{T})
     return QuaternionArg(q, phi, theta, psi)
 end
 
-typealias QuaternionArg256 QuaternionArg{Float64}
-typealias QuaternionArg128 QuaternionArg{Float32}
-typealias QuaternionArg64 QuaternionArg{Float16}
+@compat const QuaternionArg256 = QuaternionArg{Float64}
+@compat const QuaternionArg128 = QuaternionArg{Float32}
+@compat const QuaternionArg64 = QuaternionArg{Float16}
 
 convert(::Type{QuaternionArg}, x::Real) = QuaternionArg(x)
 convert{T<:AbstractFloat}(::Type{QuaternionArg{T}}, x::Real) = QuaternionArg(x)
