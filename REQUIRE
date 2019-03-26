@@ -1,2 +1,2 @@
-julia 0.5
-Compat
+julia 1.0
+Quaternions

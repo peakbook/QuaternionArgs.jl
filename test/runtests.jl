@@ -1,48 +1,44 @@
 using Quaternions
+using LinearAlgebra
 using QuaternionArgs
-using Base.Test
+using Test
 
-eps = 1e-15
+const N=100
+@testset "QuaternionArgs Tests" begin
+    @testset "getter" begin
+        for typ in [QuaternionArgF16, QuaternionArgF32, QuaternionArgF64]
+            a = rand(typ)
+            @test amp(a)==a.q
+            @test phase1(a)==a.phi
+            @test phase2(a)==a.theta
+            @test phase3(a)==a.psi
+        end
+    end
 
-function test_getter()
-	a = randn(QuaternionArg128)
-	@assert amp(a)==a.q
-	@assert phase1(a)==a.phi
-	@assert phase2(a)==a.theta
-	@assert phase3(a)==a.psi
+    for typ in [QuaternionF16, QuaternionF32, QuaternionF64]
+        @testset "$typ" begin
+            @testset "conversion" begin
+                for i in 1:N
+                    a = QuaternionArg(randn(typ))
+                    @test isapprox(a,Quaternion(a))
+                end
+            end
 
-	a = normalize(randn(QuaternionArg128))
-	b = Quaternion(a)
-	ab = QuaternionArg(b)
-	@assert comp(real(ab),b.q0,eps)
-	@assert comp(imagi(ab),b.q1,eps)
-	@assert comp(imagj(ab),b.q2,eps)
-	@assert comp(imagk(ab),b.q3,eps)
+            @testset "four arithmetic" begin
+                for i in 1:N
+                    a = randn(typ)
+                    b = randn(typ)
+                    ag = QuaternionArg(a)
+                    bg = QuaternionArg(b)
+
+                    anorm = normalize(ag)
+                    @test amp(anorm)==one(anorm.q)
+                    @test isapprox(a+b, Quaternion(ag+bg))
+                    @test isapprox(a-b, Quaternion(ag-bg))
+                    @test isapprox(a*b, Quaternion(ag*bg))
+                    @test isapprox(a/b, Quaternion(ag/bg))
+                end
+            end
+        end
+    end
 end
-
-function test_conversion()
-	a = randn(Quaternion128)
-	ag = QuaternionArg(a)
-	aga = Quaternion(ag)
-
-	@assert comp(a,aga,eps)
-end
-
-function test_four_arith()
-	a = randn(Quaternion128)
-	b = randn(Quaternion128)
-	ag = QuaternionArg(a)
-	bg = QuaternionArg(b)
-
-	anorm = normalize(ag)
-	@assert amp(anorm)==one(anorm.q)
-
-	@assert comp(a+b, Quaternion(ag+bg), eps)
-	@assert comp(a-b, Quaternion(ag-bg), eps)
-	@assert comp(a*b, Quaternion(ag*bg), eps)
-	@assert comp(a/b, Quaternion(ag/bg), eps)
-end
-
-
-
-
